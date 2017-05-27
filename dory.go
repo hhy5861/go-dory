@@ -48,27 +48,27 @@ const (
 )
 
 type DoryServer struct {
-	Topic string
-	Host  string
-	Post  int64
+	Topic      string
+	Host       string
+	Post       int64
 	InitialCap int
-	MaxCap int
+	MaxCap     int
 }
 
 /**
  * 创建TCP连接
  * start
  */
-func Connection() error {
+func (dory *DoryServer) Connection() error {
 	connetLock.Lock()
 	defer connetLock.Unlock()
 
 	factory := func() (net.Conn, error) {
-		address := fmt.Sprintf("%s:%d", DoryHost, DoryPort)
+		address := fmt.Sprintf("%s:%d", dory.Host, dory.Post)
 		return net.Dial("tcp", address)
 	}
 
-	conn, err = pool.NewChannelPool(InitialCap, MaxCap, factory)
+	conn, err = pool.NewChannelPool(dory.InitialCap, dory.MaxCap, factory)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -79,7 +79,7 @@ func Connection() error {
 /**
  * connection 维护
  */
-func getInstance() (net.Conn, error) {
+func (dory *DoryServer) getInstance() (net.Conn, error) {
 	defer func() {
 		es := recover()
 		if es != nil {
@@ -88,7 +88,7 @@ func getInstance() (net.Conn, error) {
 	}()
 
 	if conn == nil {
-		err = Connection()
+		err = dory.Connection()
 		if err != nil {
 			return nil, err
 		}
@@ -105,17 +105,17 @@ func getInstance() (net.Conn, error) {
 /**
  * 发送数据
  */
-func (d *DoryServer) Send(message proto.Message) bool {
+func (dory *DoryServer) Send(message proto.Message) bool {
 	var c net.Conn
-	c, err = getInstance()
+	c, err = dory.getInstance()
 	defer c.Close()
 
 	if err != nil {
 		conn = nil
-		c, err = getInstance()
+		c, err = dory.getInstance()
 	}
 
-	msg := d.MessageFormat(message)
+	msg := dory.MessageFormat(message)
 	_, errs := c.Write(msg)
 	if errs != nil {
 		return false
@@ -124,14 +124,14 @@ func (d *DoryServer) Send(message proto.Message) bool {
 	return true
 }
 
-func (d *DoryServer) MessageFormat(message proto.Message) (data []byte) {
+func (dory *DoryServer) MessageFormat(message proto.Message) (data []byte) {
 	mData, err := proto.Marshal(message)
 	if err != nil {
 		fmt.Printf("Marshal Error : %v\n", err.Error())
 		return
 	}
 
-	data, err = d.createAnyPartitionMsg(d.getEpochMilliseconds(), d.Topic, "", mData)
+	data, err = dory.createAnyPartitionMsg(dory.getEpochMilliseconds(), dory.Topic, "", mData)
 	if err != nil {
 		return
 	}
