@@ -131,7 +131,7 @@ func (dory *DoryServer) MessageFormat(message proto.Message) (data []byte) {
 		return
 	}
 
-	data, err = dory.createAnyPartitionMsg(dory.getEpochMilliseconds(), dory.Topic, "", mData)
+	data, err = dory.createAnyPartitionMsg(dory.GetEpochMilliseconds(), dory.Topic, "", mData)
 	if err != nil {
 		return
 	}
