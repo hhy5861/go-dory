@@ -236,6 +236,6 @@ func (dory *DoryServer) createPartitionKeyMsg(timestamp int64, partitionkey int,
 	return p, nil
 }
 
-func (dory *DoryServer) getEpochMilliseconds() int64 {
+func (dory *DoryServer) GetEpochMilliseconds() int64 {
 	return time.Now().UnixNano() / int64(time.Millisecond)
 }
